@@ -1,0 +1,11 @@
+{
+  "name": "No files written",
+  "description": "Play without leaving anything behind: no atmt_loader.log (not even for errors), no dialog log files, no diagnostics. The dialog log panel still shows every line.",
+  "changes": [
+    {"mod": "atmt_loader", "section": "Loader", "key": "LogLevel", "value": "off"},
+    {"mod": "trails_dialog_logger", "section": "General", "key": "LogToFile", "value": false},
+    {"mod": "trails_dialog_logger", "section": "General", "key": "Diagnostics", "value": false},
+    {"mod": "load_last_save", "section": "General", "key": "Diagnostics", "value": false},
+    {"mod": "battle_load", "section": "General", "key": "Diagnostics", "value": false}
+  ]
+}

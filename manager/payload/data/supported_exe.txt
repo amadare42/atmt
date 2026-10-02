@@ -1,0 +1,7 @@
+# The ed8.exe builds the mods were checked against: "<md5>  <note>". An exe not listed here is an
+# "unverified game build" in the manager - installing then needs one confirmation. After a game
+# patch: check the mods on it, add its md5 here and publish a release.
+# SenPatcher v1.x patches in memory and leaves this md5 as it is (its old_senpatcher_unpatch.cpp knows
+# the same exe as sha1 373c1d1b30001af360042365ed257e070bf40acc); an exe patched on disk by a SenPatcher
+# older than v1.0 is deliberately not listed - the manager tells the player to restore it.
+1df8472962bb03af77ea4e3289f9da48  Steam build (8,893,440 bytes; checked 2026-10-01)

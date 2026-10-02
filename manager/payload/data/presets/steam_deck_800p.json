@@ -1,0 +1,16 @@
+{
+  "name": "Steam Deck 800p",
+  "description": "The Deck's 1280x800 screen: the letterbox mod on, the game started at 1280x800 with the 16:9 UI letterboxed and crisp small text. The touchscreen and trackpads still work as a mouse in the overlay.",
+  "recommended_on": ["linux"],
+  "mods": {"deckscreen": true},
+  "icon_pack": true,
+  "changes": [
+    {"mod": "deckscreen", "section": "General", "key": "Enabled", "value": true},
+    {"mod": "deckscreen", "section": "General", "key": "Letterbox", "value": true},
+    {"mod": "deckscreen", "section": "General", "key": "ForceDeckResolution", "value": true},
+    {"mod": "deckscreen", "section": "General", "key": "CrispText", "value": true},
+    {"mod": "deckscreen", "section": "General", "key": "AnchoredScreens", "value": true},
+    {"mod": "atmt_overlay", "section": "General", "key": "Mouse", "value": true},
+    {"mod": "atmt_overlay", "section": "General", "key": "ShowCursor", "value": true}
+  ]
+}

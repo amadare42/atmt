@@ -1,0 +1,10 @@
+; gfsdk.def - exports of the GFSDK_SSAO proxy dll.
+;
+; The names must match the original library exactly (undecorated C names), because
+; ed8.exe imports them by name. MinGW maps the C symbol _GFSDK_SSAO_x (defined in
+; proxy_gfsdk.s) to the export name GFSDK_SSAO_x.
+LIBRARY GFSDK_SSAO_D3D11.win32.dll
+
+EXPORTS
+    GFSDK_SSAO_CreateContext_D3D11
+    GFSDK_SSAO_GetVersion

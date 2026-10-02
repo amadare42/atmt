@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=ATMT Manager
+Comment=Install and configure the Trails of Cold Steel mods
+Exec=atmt_manager
+Icon=atmt-manager
+Categories=Game;Utility;
+Terminal=false

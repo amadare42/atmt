@@ -1,0 +1,10 @@
+{
+  "name": "PC",
+  "description": "A desktop or laptop screen with a mouse: the Steam Deck letterbox mod off (the game's own UI layout and resolution), and the mouse usable in the overlay with a visible pointer.",
+  "recommended_on": ["windows"],
+  "mods": {"deckscreen": false},
+  "changes": [
+    {"mod": "atmt_overlay", "section": "General", "key": "Mouse", "value": true},
+    {"mod": "atmt_overlay", "section": "General", "key": "ShowCursor", "value": true}
+  ]
+}

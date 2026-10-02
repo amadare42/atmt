@@ -1,0 +1,35 @@
+# Build output. build/ holds the intermediates of every build tree, dist/ everything usable that
+# came out of them (docs/BUILD.md).
+/build/
+/dist/
+
+# Reverse-engineering workspace: your copy of the game's exe, the Ghidra project and its logs,
+# and optional checkouts of other people's research (docs/ENGINE_NOTES.md)
+/ghidra/ed8.exe
+/ghidra/proj/
+/ghidra/logs/
+/research/
+
+# Local scratch and test-run output
+/scratch/
+/al_test_runs/
+
+# Runtime output a game folder collects (in case one is used as a working directory)
+atmt_dialogs.jsonl
+atmt_latest.txt
+atmt_diagnostics.log
+atmt_loader.log
+
+# Python bytecode from the tools
+__pycache__/
+*.pyc
+
+# Editor / agent working folders
+.vs/
+.vscode/
+.idea/
+.claude/
+.kilo/
+
+# Release signing keys never belong in the repository (the public half, manager/release_pubkey.txt, does)
+*.key

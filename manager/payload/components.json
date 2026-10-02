@@ -1,0 +1,14 @@
+{
+  "_doc": "Every component the manager installs, each with its own version (docs/MANAGER.md, 'Components'). Bump a component's version when its files change: tools\\release.ps1 refuses a changed component whose version is the one already released, and publishes only the components whose version is new. 'changelog' is what the manager shows for this version. 'min_manager_version' (here as the default, or per component) is the oldest manager that may install it. The loader is the proxy dll; data is data/ (presets, supported_exe.txt, install_rules.json, icon_pack.json) and the settings schema's input names; a mod is atmt_mods/<name>.dll, its ini template if mods/*/<name>.ini exists, and its part of dist/settings_schema.json. A built dll not listed under mods ships nowhere.",
+  "min_manager_version": "0.1.0",
+  "loader": {"title": "Loader", "version": "0.1.0", "changelog": ""},
+  "data": {"title": "Presets and game data", "version": "0.1.0", "changelog": ""},
+  "mods": [
+    {"name": "atmt_overlay", "title": "Overlay", "version": "0.1.0", "changelog": ""},
+    {"name": "trails_dialog_logger", "title": "Dialog log", "version": "0.1.0", "changelog": ""},
+    {"name": "deckscreen", "title": "Deckscreen (Steam Deck)", "version": "0.1.0", "changelog": ""},
+    {"name": "stick_rotation_speed", "title": "Camera", "version": "0.1.0", "changelog": ""},
+    {"name": "load_last_save", "title": "Autoload", "version": "0.1.0", "changelog": ""},
+    {"name": "battle_load", "title": "Battle load", "version": "0.1.0", "changelog": ""}
+  ]
+}

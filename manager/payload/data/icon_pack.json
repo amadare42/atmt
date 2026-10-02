@@ -1,0 +1,30 @@
+{
+  "_doc": [
+    "The icon pack's targets: the manager builds mods/atmt_icon_pack.p3a from them on the player's machine",
+    "(manager/src/core/icon_pack.h). Each target pre-shrinks",
+    "cells of one uncompressed RGBA texture in one or more packages. A changed list marks built packs out of date.",
+    "pkg: package paths as the game and SenPatcher name them (all that exist are processed).",
+    "texture: the file inside the package. cell_grid: cells per row, so a cell is width / cell_grid",
+    "  texels whatever size a texture mod made the atlas.",
+    "draw_size: the size in 720p-canvas pixels the game draws a cell at (the deckscreen trace gives",
+    "  it: m00 x 360 for design quads). rows/cols: which cells, counted from the atlas's first stored row",
+    "  (the game's v = 0, the bottom of the picture); default all. texture_size: [w, h] if the tool",
+    "  cannot tell it from the file. disabled: true leaves a target out.",
+    "original_art: true takes the cells' pictures from the game's own package in the data folder",
+    "  (the art before any texture mod), pre-shrunk into the modded atlas's cells.",
+    "enlarge: true doubles an atlas whose cells are less than 2x draw_size (the game's own 512px icons.png:",
+    "  32px cells at 20px) until they are not, so the game's own textures get the pre-shrink too."
+  ],
+  "targets": [
+    {
+      "note": "battle status/effect icons: STR/DEF/ATS/ADF/SPD/MOV up/down and the ailment icons",
+      "pkg": ["data/asset/D3D11_us/I_SYSTEM.pkg", "data/asset/D3D11/I_SYSTEM.pkg"],
+      "texture": "icons.png.phyre",
+      "cell_grid": 16,
+      "draw_size": 20,
+      "rows": [0, 1, 2, 3],
+      "original_art": true,
+      "enlarge": true
+    }
+  ]
+}

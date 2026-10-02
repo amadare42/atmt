@@ -1,0 +1,56 @@
+# ATMT Manager: build and test the app on Linux (the Deck's build, in the same container
+# tools\build_manager.ps1 -Linux uses) and on Windows (llvm-mingw x86_64, as locally).
+#
+# Releases are made locally with tools\release.ps1 for now: the payload needs the 32-bit mods
+# (tools\build.ps1) and the release key stays off CI (docs/MANAGER.md "Releases").
+name: manager
+
+on:
+  push:
+    paths: ['manager/**', 'shared/ini.h', '.github/workflows/manager.yml']
+  pull_request:
+    paths: ['manager/**', 'shared/ini.h', '.github/workflows/manager.yml']
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: build image
+        run: docker build -t atmt-manager-build manager/packaging
+      - name: build and test
+        run: docker run --rm -v "$PWD:/src" atmt-manager-build bash manager/packaging/build_linux.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atmt_manager-linux
+          path: dist/linux/atmt_manager
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: llvm-mingw
+        shell: pwsh
+        run: |
+          $rel = Invoke-RestMethod https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest `
+                   -Headers @{ Authorization = "Bearer ${{ github.token }}" }
+          $url = ($rel.assets | Where-Object { $_.name -match '^llvm-mingw-.*-ucrt-x86_64\.zip$' } | Select-Object -First 1).browser_download_url
+          Invoke-WebRequest $url -OutFile llvm-mingw.zip
+          Expand-Archive llvm-mingw.zip -DestinationPath C:\
+          (Get-ChildItem C:\llvm-mingw-*\bin -Directory).FullName | Out-File -Append $env:GITHUB_PATH
+      - name: build and test
+        shell: pwsh
+        run: |
+          cmake -S manager -B build/manager-win -G "MinGW Makefiles" -DCMAKE_MAKE_PROGRAM=mingw32-make `
+            -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ -DCMAKE_BUILD_TYPE=Release
+          mingw32-make -C build/manager-win -j4 atmt_manager atmt_manager_test
+          .\build\manager-win\atmt_manager_test.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atmt_manager-windows
+          path: build/manager-win/atmt_manager.exe

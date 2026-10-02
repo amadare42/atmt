@@ -1,0 +1,7 @@
+# Tools that run on the other side (the Steam Deck, under bash) must not be checked out with
+# CRLF: bash reads the "\r" as part of the line and a backslash continuation would break.
+# tools\deploy_deck.ps1 normalises the file it sends anyway - this keeps the checkout honest.
+tools/*.sh text eol=lf
+# The manager's Linux build scripts run in a Linux container (manager/packaging, CI).
+manager/packaging/*.sh text eol=lf
+manager/packaging/Dockerfile text eol=lf

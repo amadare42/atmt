@@ -1,0 +1,13 @@
+{
+  "comment": "Leftovers of earlier versions of the loader and mods, removed on every install (paths relative to the game folder; * matches within one name; a trailing / is a folder). Only the toolkit's own files can be named: a rule's first path part must start with atmt_ (the manager refuses any other rule). The manager itself knows none of these names.",
+  "remove": [
+    "atmt_core.dll", "atmt_names.txt", "atmt_catalog.bin",
+    "atmt_watch.txt", "atmt_watch_state.txt", "atmt_candidates.log", "atmt_proxy_state.txt",
+    "atmt_proxy_error.txt", "atmt_startup_error.txt",
+    "atmt_core*.dll", "atmt_glyph*.dll", "atmt_probe_loader*.dll",
+    "atmt_cache/",
+    "atmt_mods/probe_*", "atmt_mods/trails_dialog_logger_dev_*", "atmt_mods/atmt_watch_state.txt",
+    "atmt_mods/atmt_candidates.log",
+    "atmt_mods/deck_letterbox.dll", "atmt_mods/disabled/deck_letterbox.dll"
+  ]
+}
