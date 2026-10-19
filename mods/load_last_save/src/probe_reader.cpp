@@ -25,6 +25,10 @@ namespace al {
 
 namespace {
 
+// The last file name the reader was seen opening (LastGameReadName).
+volatile LONG g_name_seq = 0;
+char g_last_name[64] = {0};
+
 const AtmtModApi* g_api = nullptr;
 const AtmtModApi* main_api = nullptr;
 void* g_reader_trampoline = nullptr;
@@ -143,6 +147,26 @@ std::string StackFrames(unsigned char* snapshot, unsigned max_frames) {
 
 }  // namespace
 
+void SetLastGameReadName(const std::string& name) {
+    // Written from the game's thread while the mod reads it: keep it to one small buffer with a
+    // sequence counter, so a torn read is impossible to act on.
+    InterlockedIncrement(&g_name_seq);
+    _snprintf(g_last_name, sizeof(g_last_name) - 1, "%s", name.c_str());
+    g_last_name[sizeof(g_last_name) - 1] = '\0';
+    InterlockedIncrement(&g_name_seq);
+}
+
+std::string LastGameReadName() {
+    std::string out;
+    for (int attempt = 0; attempt < 4; ++attempt) {
+        const LONG before = g_name_seq;
+        if (before % 2 != 0) continue;          // a write is in progress
+        out.assign(g_last_name);
+        if (g_name_seq == before) return out;   // unchanged while reading
+    }
+    return out;
+}
+
 std::string HookStackFrames(const void* snapshot, unsigned max_frames) {
     return StackFrames(const_cast<unsigned char*>(static_cast<const unsigned char*>(snapshot)),
                        max_frames);
@@ -161,7 +185,6 @@ void ProbeReader(void* snapshot) {
 
     const std::string name = ReadCStringAt(kNameBufVa, 128);
     SetLastGameReadName(name);
-    NotifySaveSystemReady();
     uintptr_t manager = 0;
     if (Readable(reinterpret_cast<const void*>(kManagerPtrVa), 4)) {
         manager = *reinterpret_cast<const uintptr_t*>(kManagerPtrVa);
@@ -226,10 +249,6 @@ bool InstallReaderProbe(const AtmtModApi* api, std::string* why_not) {
     g_reader_trampoline_ptr = trampoline;
     main_api = api;
     api->hook_enable(handle);
-    // The mod calls the game through this trampoline when it performs the load, and it learns from
-    // this hook when the game's save subsystem is up (the game reading a file itself).
-    SetSaveReaderTrampoline(trampoline);
-    SetLoadLog(reinterpret_cast<void*>(api->log));
     LogLine("reader probe: watching 0x00485000 (the function that reads a save file)");
     return true;
 }

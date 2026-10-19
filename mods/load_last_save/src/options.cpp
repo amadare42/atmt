@@ -1,6 +1,8 @@
 // options.cpp - the command line, and the settings file.
 #include "al.h"
 
+#include "atmt_input.h"
+
 #include <shellapi.h>
 
 #include <cstdlib>
@@ -27,13 +29,55 @@ bool HasSwitch(const std::wstring& command_line, const wchar_t* sw) {
     return found;
 }
 
-bool WantsLoad(const Options& options, const std::wstring& command_line) {
+bool WantsLoad(const Options& options, const std::wstring& command_line, bool override_held) {
     if (!options.enabled) return false;
+    bool load = false;
     switch (options.autoload) {
-        case Autoload::kAlways: return true;
-        case Autoload::kParameter: return HasSwitch(command_line, kSwitch);
-        default: return false;
+        case Autoload::kAlways: load = true; break;
+        case Autoload::kParameter: load = HasSwitch(command_line, kSwitch); break;
+        default: break;
     }
+    return load != override_held;
+}
+
+namespace {
+
+// XINPUT_STATE, read straight from xinput1_3's export: the game imports it, so it is loaded, and
+// the export is not the game's import slot the overlay patches - this read changes nothing for anyone.
+struct PadState {
+    uint32_t packet;
+    uint16_t buttons;
+    uint8_t lt, rt;
+    int16_t lx, ly, rx, ry;
+};
+typedef uint32_t(__stdcall* XInputGetStateFn)(uint32_t index, PadState* state);
+
+uint16_t PadButtonsDown() {
+    static XInputGetStateFn xinput = nullptr;
+    if (xinput == nullptr) {
+        HMODULE module = GetModuleHandleW(L"xinput1_3.dll");
+        if (module == nullptr) return 0;
+        xinput = reinterpret_cast<XInputGetStateFn>(GetProcAddress(module, "XInputGetState"));
+        if (xinput == nullptr) return 0;
+    }
+    uint16_t buttons = 0;
+    for (uint32_t i = 0; i < 4; ++i) {
+        PadState state{};
+        if (xinput(i, &state) == 0) {
+            buttons = static_cast<uint16_t>(buttons | atmt::PadButtons(state.buttons, state.lt, state.rt));
+        }
+    }
+    return buttons;
+}
+
+}  // namespace
+
+bool OverrideHeld(unsigned key_chord, unsigned short pad_chord) {
+    if (key_chord != 0 && atmt::KeyDown(atmt::ChordKey(key_chord))) {
+        const unsigned want = atmt::ChordModifiers(key_chord);
+        if ((atmt::ModifiersDown() & want) == want) return true;
+    }
+    return pad_chord != 0 && (PadButtonsDown() & pad_chord) == pad_chord;
 }
 
 // A section header ("[General]") is not a key: it has no '=' and is skipped by the reader.
@@ -86,14 +130,14 @@ Options LoadOptions(const std::wstring& ini_file) {
             o.probe_fopen = _stricmp(val, "true") == 0 || strcmp(val, "1") == 0;
         } else if (_stricmp(key, "ProbeFade") == 0) {
             o.probe_fade = _stricmp(val, "true") == 0 || strcmp(val, "1") == 0;
-        } else if (_stricmp(key, "TitleLoad") == 0) {
-            o.title_load = _stricmp(val, "false") != 0 && strcmp(val, "0") != 0;
-        } else if (_stricmp(key, "StartDelayMs") == 0) {
-            o.start_delay_ms = static_cast<unsigned>(strtoul(val, nullptr, 10));
         } else if (_stricmp(key, "ProbeMemset") == 0) {
             o.probe_memset = _stricmp(val, "true") == 0 || strcmp(val, "1") == 0;
         } else if (_stricmp(key, "ProbeRequest") == 0) {
             o.probe_request = _stricmp(val, "true") == 0 || strcmp(val, "1") == 0;
+        } else if (_stricmp(key, "OverrideKey") == 0) {
+            o.override_key = val;   // empty = no key
+        } else if (_stricmp(key, "OverridePad") == 0) {
+            o.override_pad = val;   // empty = no pad chord
         } else if (_stricmp(key, "PadScript") == 0) {
             o.pad_script = val;   // a file name in the mod folder; empty disables the injector
         } else if (_stricmp(key, "SaveDir") == 0 && val[0] != '\0') {

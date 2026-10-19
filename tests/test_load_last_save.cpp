@@ -95,6 +95,20 @@ int main(int argc, char** argv) {
         o.autoload = al::Autoload::kAlways;
         o.enabled = false;
         Check(!al::WantsLoad(o, L"ed8.exe -al"), "Enabled=false wins over Autoload=always");
+        Check(!al::WantsLoad(o, L"ed8.exe -al", true), "Enabled=false wins over the override too");
+    }
+
+    // --- the override: held at startup, it flips the decision -----------------------
+    {
+        al::Options o;
+        Check(o.override_key == "Space" && o.override_pad == "RT", "the override defaults to Space / RT");
+        Check(!al::WantsLoad(o, L"ed8.exe", true), "always + override: no load");
+        o.autoload = al::Autoload::kParameter;
+        Check(al::WantsLoad(o, L"ed8.exe", true), "parameter, no -al + override: loads");
+        Check(!al::WantsLoad(o, L"ed8.exe -al", true), "parameter, -al + override: no load");
+        o.autoload = al::Autoload::kDisabled;
+        Check(al::WantsLoad(o, L"ed8.exe", true), "disabled + override: loads");
+        Check(!al::OverrideHeld(0, 0), "no chords: the override is never held");
     }
 
     // --- which files in the save folder are saves -------------------------------------
@@ -182,6 +196,8 @@ int main(int argc, char** argv) {
                             "ProbeWriters=true\n"
                             "ProbeFade=true\n"
                             "PadScript=pad_script.txt\n"
+                            "OverrideKey=Ctrl+L\n"
+                            "OverridePad=\n"
                             "SaveDir=C:\\atmt_test\\saves\n");
             std::fclose(f);
         }
@@ -195,6 +211,8 @@ int main(int argc, char** argv) {
         Check(o.probe_writers, "the writer-probe switch is read");
         Check(o.probe_fade, "the fade-probe switch is read");
         Check(o.pad_script == "pad_script.txt", "the pad script name is read");
+        Check(o.override_key == "Ctrl+L", "OverrideKey is read");
+        Check(o.override_pad.empty(), "an empty OverridePad means no pad chord");
         Check(o.save_dir == L"C:\\atmt_test\\saves",
               "SaveDir is read (this is what keeps a test run out of the real save folder)");
         const al::Options missing = al::LoadOptions(root + L"\\_no_such_al.ini");

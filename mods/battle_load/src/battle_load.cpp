@@ -488,7 +488,7 @@ bool LeaveForTitle(uintptr_t ctx, uintptr_t holder) {
             : nullptr;
     if (service == nullptr || service->version < ATMT_LOAD_LAST_SAVE_API_VERSION
         || service->size < sizeof(AtmtLoadLastSaveApi)) {
-        LogError("battle_load: the title route needs load_last_save (TitleLoad=true) - it is not there; the "
+        LogError("battle_load: the title route needs load_last_save (its title hook) - it is not there; the "
             "battle goes on");
         return false;
     }

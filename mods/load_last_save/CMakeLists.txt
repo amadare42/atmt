@@ -6,7 +6,6 @@ set(MOD_SOURCES
     src/mod_entry.cpp
     src/options.cpp
     src/saves.cpp
-    src/trigger.cpp
     src/title_load.cpp
     src/probe.cpp
     src/probe_reader.cpp

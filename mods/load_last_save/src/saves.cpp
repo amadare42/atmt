@@ -108,4 +108,46 @@ std::string FormatTime(const FILETIME& ft) {
     return buf;
 }
 
+// "save063.dat" -> 63. The name is "save%03d.dat" (11 characters - a >= 12 guard here silently
+// rejected every real save once, so the length is checked against the shortest valid form). Autosaves
+// are named differently ("autosaveNN.dat"); ParseSaveTarget reads those.
+unsigned SaveSlotNumber(const std::string& file_name) {
+    if (file_name.size() < 9) return kNoSlot;      // "save0.dat" is the shortest plausible form
+    if (_strnicmp(file_name.c_str(), "save", 4) != 0) return kNoSlot;
+    if (_stricmp(file_name.c_str() + file_name.size() - 4, ".dat") != 0) return kNoSlot;
+    const size_t digits = file_name.size() - 4 - 4;   // "save" + digits + ".dat"
+    if (digits == 0 || digits > 4) return kNoSlot;
+    unsigned value = 0;
+    for (size_t i = 4; i < 4 + digits; ++i) {
+        const char c = file_name[i];
+        if (c < '0' || c > '9') return kNoSlot;
+        value = value * 10 + static_cast<unsigned>(c - '0');
+    }
+    return value;
+}
+
+SaveTarget ParseSaveTarget(const std::string& file_name) {
+    SaveTarget target;
+    const unsigned slot = SaveSlotNumber(file_name);
+    if (slot != kNoSlot) {
+        // 511 is the system file (save511.dat), which the load menu never lists.
+        if (slot != 511) target.slot = slot;
+        return target;
+    }
+    // "autosaveNN.dat": the game formats the number with %02d, so two or three digits come back.
+    if (file_name.size() < 14 || _strnicmp(file_name.c_str(), "autosave", 8) != 0) return target;
+    if (_stricmp(file_name.c_str() + file_name.size() - 4, ".dat") != 0) return target;
+    const size_t digits = file_name.size() - 8 - 4;
+    if (digits < 2 || digits > 3) return target;
+    unsigned value = 0;
+    for (size_t i = 8; i < 8 + digits; ++i) {
+        const char c = file_name[i];
+        if (c < '0' || c > '9') return target;
+        value = value * 10 + static_cast<unsigned>(c - '0');
+    }
+    target.slot = value;
+    target.autosave = true;
+    return target;
+}
+
 }  // namespace al

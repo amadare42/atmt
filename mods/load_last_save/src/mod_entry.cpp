@@ -2,15 +2,17 @@
 //
 // What it does, in order, and nothing else:
 //   1. does this start load? Autoload=always (the default), or =parameter with `-al` on the
-//      process's command line. If not, say so and stop.
+//      process's command line - flipped when the override (OverrideKey/OverridePad, Space and RT by
+//      default) is held until the title is up. If not, say so and stop.
 //   2. which save is newest (options: SaveDir, IncludeAutosaves)?
 //   3. say what it chose and why (the chosen file, its time, how many candidates).
-//   4. ask the game to load it (TriggerLoad - the single function that needs the game).
+//   4. have the title load it (the title route, src/title_load.cpp - the only way the mod loads).
 #include "al.h"
 
 #include "code_check.h"
 #include "load_last_save_api.h"
 #include "mod_api.h"
+#include "atmt_input.h"
 
 #include <cstdio>
 #include <string>
@@ -60,9 +62,10 @@ bool GameCodeMatches(std::string* why_not) {
 // start itself still reads them through LoadOptions (which the offline tests cover).
 int32_t g_set_autoload = static_cast<int32_t>(al::Autoload::kAlways);
 int32_t g_set_include_autosaves = 1;
-int32_t g_set_title_load = 1;
 int32_t g_set_diagnostics = 0;
 char g_set_save_dir[260] = "";
+char g_set_override_key[64] = "";
+char g_set_override_pad[64] = "";
 
 const AtmtSetting kSettings[] = {
     {ATMT_SETTING_ENUM, ATMT_SETTING_RESTART, "General", "Autoload", "Load the newest save",
@@ -70,15 +73,19 @@ const AtmtSetting kSettings[] = {
      "parameter - only when the game is started with -al (Steam: launch options)\n"
      "disabled  - never",
      &g_set_autoload, 0, 0, 0, 0, al::kAutoloadTokens, 3},
+    {ATMT_SETTING_KEY, ATMT_SETTING_RESTART, "General", "OverrideKey", "Override key",
+     "hold while the game starts to do the opposite of the above for that start: skip a load that "
+     "would happen, or load when it would not; none = no key",
+     g_set_override_key, sizeof(g_set_override_key)},
+    {ATMT_SETTING_PAD_BUTTON, ATMT_SETTING_RESTART, "General", "OverridePad", "Override pad chord",
+     "the same as the override key, on the pad (held until the title screen is up); none = no chord",
+     g_set_override_pad, sizeof(g_set_override_pad)},
     {ATMT_SETTING_BOOL, ATMT_SETTING_RESTART, "General", "IncludeAutosaves", "Autosaves count",
      "an autosave can be the newest save; off = only ever a manual slot", &g_set_include_autosaves},
     {ATMT_SETTING_STRING, ATMT_SETTING_RESTART | ATMT_SETTING_ADVANCED, "General", "SaveDir",
      "Save folder",
      "where the saves are; none = the game's own (%USERPROFILE%\\Saved Games\\Falcom\\ed8)",
      g_set_save_dir, sizeof(g_set_save_dir)},
-    {ATMT_SETTING_BOOL, ATMT_SETTING_RESTART | ATMT_SETTING_ADVANCED, "General", "TitleLoad",
-     "Title route", "load through the title's own save menu (the route that enters the game)",
-     &g_set_title_load},
     {ATMT_SETTING_BOOL, ATMT_SETTING_RESTART | ATMT_SETTING_ADVANCED, "General", "Diagnostics",
      "Diagnostics", "list every candidate save in the log, not only the chosen one",
      &g_set_diagnostics},
@@ -96,6 +103,19 @@ std::string Narrow(const std::wstring& w) {
 std::wstring LeafName(const std::wstring& path) {
     const size_t slash = path.find_last_of(L"\\/");
     return slash == std::wstring::npos ? path : path.substr(slash + 1);
+}
+
+// The override (al.h): watched from the mod's start until the title screen is up, which is the
+// moment the load is committed. True as soon as it is seen held; the game pauses while unfocused, so
+// the ceiling is generous.
+bool WatchOverride(unsigned key_chord, unsigned short pad_chord) {
+    const DWORD deadline = GetTickCount() + 10 * 60 * 1000;
+    while (g_stop == 0 && static_cast<LONG>(GetTickCount() - deadline) < 0) {
+        if (al::OverrideHeld(key_chord, pad_chord)) return true;
+        if (al::TitleUpdateCalls() > 0) return false;
+        Sleep(30);
+    }
+    return false;
 }
 
 // ---------------------------------------------------------------- the service (load_last_save_api.h)
@@ -199,15 +219,27 @@ DWORD WINAPI Run(LPVOID) {
     }
 
     const std::wstring command_line = al::ProcessCommandLine();
-    const bool wants_load = al::WantsLoad(options, command_line);
+    const bool planned_load = al::WantsLoad(options, command_line);
+    // The override, as chords. A name that is not one is reported and means none.
+    const unsigned override_key = atmt::KeyChordFromName(options.override_key);
+    const unsigned short override_pad = atmt::PadChordFromName(options.override_pad);
+    if (!options.override_key.empty() && override_key == 0) {
+        LogErrorUtf8("al: OverrideKey=" + options.override_key + " is not a key - no override key");
+    }
+    if (!options.override_pad.empty() && override_pad == 0) {
+        LogErrorUtf8("al: OverridePad=" + options.override_pad + " is not a pad chord - no override chord");
+    }
+    const bool has_override = override_key != 0 || override_pad != 0;
+    // With an override, any start may end up loading, so everything a load needs goes in either way.
+    const bool may_load = planned_load || has_override;
 
-    // The reader hook is what lets the mod call the game's own load function; it is needed both for
-    // the probe diagnostics and for the real thing, so install it whenever either is wanted.
-    if (options.probe_reader || wants_load) {
+    // The reader hook is how the log knows the game opened the chosen save (RunTitleLoad's witness),
+    // and the ProbeReader diagnostic; install it whenever either is wanted.
+    if (options.probe_reader || may_load) {
         std::string why_not;
         if (al::InstallReaderProbe(g_api, &why_not)) {
             LogUtf8(options.probe_reader ? "al: reader probe is on (ProbeReader=true)"
-                                         : "al: reader hooked (needed to perform the load)");
+                                         : "al: reader hooked (to see the game open the save)");
         } else {
             LogUtf8("al: reader hook could not be installed: " + why_not);
         }
@@ -217,18 +249,21 @@ DWORD WINAPI Run(LPVOID) {
     // without -al: other mods arm it later through the service (battle_load sends the game back to the
     // title and has the save it picked loaded there). Idle, it costs one compare per title frame.
     bool title_hooked = false;
-    if (options.title_load) {
+    {
         std::string why_not;
         title_hooked = al::InstallTitleHook(g_api, &why_not);
-        LogUtf8(title_hooked ? "al: the title update hook is installed"
-                             : "al: the title update hook could not be installed: " + why_not);
+        if (title_hooked) {
+            LogUtf8("al: the title update hook is installed");
+        } else {
+            LogErrorUtf8("al: the title update hook could not be installed (" + why_not
+                         + ") - no save is loaded automatically");
+        }
         if (title_hooked && g_api->service_publish != nullptr
             && g_api->service_publish(g_api, ATMT_LOAD_LAST_SAVE_SERVICE, &kService) == 0) {
             LogUtf8("al: the title route is offered to other mods (" ATMT_LOAD_LAST_SAVE_SERVICE ")");
         }
     }
-    al::SetStartDelayMs(options.start_delay_ms);
-    if (wants_load) {
+    if (may_load) {
         // Diagnostic: observes the save menu's "arm the manager" step (FUN_0064CAD0) and logs each
         // phase the game uses, once each - a title load shows up as phase 2 (see probe_flow.cpp).
         std::string flow_why;
@@ -320,24 +355,36 @@ DWORD WINAPI Run(LPVOID) {
             }
         }
     }
+    const char* const planned_why = options.autoload == al::Autoload::kDisabled ? "Autoload=disabled"
+                                    : options.autoload == al::Autoload::kAlways ? "Autoload=always"
+                                    : planned_load ? "-al given"
+                                                   : "no -al on the command line";
+    if (!title_hooked) return 0;   // the title route is the only way to load, and it is not there
+    const bool override_held = has_override && WatchOverride(override_key, override_pad);
+    if (g_stop != 0) return 0;
+    const bool wants_load = al::WantsLoad(options, command_line, override_held);
+    if (override_held) {
+        std::string held = atmt::KeyChordName(override_key);
+        if (override_key != 0 && override_pad != 0) held += " / ";
+        held += atmt::PadChordName(override_pad);
+        LogUtf8("al: override (" + held + ") held - " + planned_why
+                + (wants_load ? ", but loading the newest save" : ", so not loading this time"));
+    }
     if (!wants_load) {
         // Not an error: the normal way the game is started. Say so, so a test can assert it.
-        LogUtf8(options.autoload == al::Autoload::kDisabled
-                    ? "al: Autoload=disabled, nothing to do"
-                    : "al: no -al on the command line, nothing to do");
+        if (!override_held) LogUtf8(std::string("al: ") + planned_why + ", nothing to do");
         return 0;
     }
-    LogUtf8(options.autoload == al::Autoload::kAlways ? "al: Autoload=always - loading the newest save"
-                                                      : "al: -al given - loading the newest save");
+    if (!override_held) LogUtf8(std::string("al: ") + planned_why + " - loading the newest save");
 
     const std::wstring dir = options.save_dir.empty() ? al::DefaultSaveDir() : options.save_dir;
     const std::vector<al::SaveFile> saves = al::FindSaves(dir, options.include_autosaves);
     if (dir.empty()) {
-        LogUtf8("al: -al given, but no save folder could be determined");
+        LogUtf8("al: no save folder could be determined - nothing to load");
         return 0;
     }
     if (saves.empty()) {
-        LogUtf8("al: -al given, but no saves in " + Narrow(dir) + " - nothing to load");
+        LogUtf8("al: no saves in " + Narrow(dir) + " - nothing to load");
         return 0;
     }
 
@@ -361,19 +408,9 @@ DWORD WINAPI Run(LPVOID) {
         }
     }
 
-    if (title_hooked) {
-        std::string why_not;
-        if (RunTitleLoad(Narrow(LeafName(chosen.path)), &why_not)) return 0;
-        LogUtf8("al: the title route did not load " + Narrow(LeafName(chosen.path)) + " - " + why_not);
-        return 0;
-    }
-
     std::string why_not;
-    const bool done = al::TriggerLoad(chosen.path, &why_not);
-    if (done) {
-        LogUtf8("al: asked the game to load " + Narrow(LeafName(chosen.path)));
-    } else {
-        LogUtf8("al: would load " + Narrow(LeafName(chosen.path)) + " - " + why_not);
+    if (!RunTitleLoad(Narrow(LeafName(chosen.path)), &why_not)) {
+        LogUtf8("al: the title route did not load " + Narrow(LeafName(chosen.path)) + " - " + why_not);
     }
     return 0;
 }
@@ -395,8 +432,9 @@ __declspec(dllexport) uint32_t __cdecl AtmtModInit(const AtmtModApi* api) {
     const al::Options defaults;
     g_set_autoload = static_cast<int32_t>(defaults.autoload);
     g_set_include_autosaves = defaults.include_autosaves ? 1 : 0;
-    g_set_title_load = defaults.title_load ? 1 : 0;
     g_set_diagnostics = defaults.diagnostics ? 1 : 0;
+    _snprintf(g_set_override_key, sizeof(g_set_override_key) - 1, "%s", defaults.override_key.c_str());
+    _snprintf(g_set_override_pad, sizeof(g_set_override_pad) - 1, "%s", defaults.override_pad.c_str());
     if (api->settings_register != nullptr) {
         api->settings_register(api, "Autoload", kSettings, sizeof(kSettings) / sizeof(kSettings[0]));
     }
@@ -414,7 +452,7 @@ __declspec(dllexport) void __cdecl AtmtModShutdown(void) {
 // One sentence for the overlay and the manager (shared/mod_api.h, AtmtModDescription).
 __declspec(dllexport) const char* __cdecl AtmtModDescription(void) {
     return "Loads the newest save straight from the title screen, with the -al launch option or "
-           "always.";
+           "always. Hold Space or RT while the game starts to do the opposite for that start.";
 }
 
 BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID) {

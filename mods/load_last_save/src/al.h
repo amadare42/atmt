@@ -28,6 +28,13 @@ inline const wchar_t* const kSwitch = L"-al";
 enum class Autoload { kAlways = 0, kParameter = 1, kDisabled = 2 };
 inline const char* const kAutoloadTokens[] = {"always", "parameter", "disabled"};
 
+// The override: a key chord or pad chord held while the game starts flips the decision above for
+// that one start - a start that would load does not, and one that would not (no -al, or
+// Autoload=disabled) does. Watched from the mod's start until the title screen is up, which is
+// the moment the load is committed. Empty = none.
+inline const char* const kDefaultOverrideKey = "Space";
+inline const char* const kDefaultOverridePad = "RT";
+
 struct Options {
     bool enabled = true;
     Autoload autoload = Autoload::kAlways;
@@ -44,16 +51,6 @@ struct Options {
     // Diagnostic: log the arguments the game passes to its own save/load request (FUN_00484870).
     // This is how the mod learns what a real load looks like - see src/probe_request.cpp.
     bool probe_request = false;
-    // The title route (src/title_load.cpp) - the one "-al" uses. On the game's own thread it starts the
-    // save menu's state machine the way the title's "Load" does (phase 2, the title's own completion
-    // callback) and advances the save manager's state machine to the chosen slot once the menu has
-    // armed it. The game then enters the session itself. If this is off, or its hook fails to install,
-    // TriggerLoad() (trigger.cpp) is the fallback: it gets the file read but does not enter the game
-    // (it never installs the menu's completion callback - only a real Menu::Open() call does that).
-    bool title_load = true;
-    // How long to wait after the save subsystem is up before the fallback route (trigger.cpp) requests
-    // the load (ms). The title route does not use this - its own settle wait is in title_load.cpp.
-    unsigned start_delay_ms = 1500;
     // Diagnostic: log suspicious memset calls (null destination / huge count) with their caller.
     bool probe_memset = false;
     // Diagnostic: which game function opens a save file (hooks the CRT's fopen).
@@ -68,6 +65,8 @@ struct Options {
     // src/pad_inject.cpp.
     std::string pad_script;
     std::wstring save_dir;           // empty = the game's own folder (DefaultSaveDir())
+    std::string override_key = kDefaultOverrideKey;   // OverrideKey=: a key chord ("Space", "Ctrl+L")
+    std::string override_pad = kDefaultOverridePad;   // OverridePad=: a pad chord ("RT", "LB+RB")
 };
 
 // Parses a full Windows command line (the string GetCommandLineW returns, quotes and all).
@@ -76,9 +75,14 @@ bool HasSwitch(const std::wstring& command_line, const wchar_t* sw);
 // Reads the mod's settings file (its own ini; see Options).
 Options LoadOptions(const std::wstring& ini_file);
 
-// Whether this start loads the newest save: the Autoload mode and the command line together
-// (Enabled=false turns the whole mod off, whatever the mode says).
-bool WantsLoad(const Options& options, const std::wstring& command_line);
+// Whether this start loads the newest save: the Autoload mode and the command line together, flipped
+// when the override is held (Enabled=false turns the whole mod off, whatever the mode says).
+bool WantsLoad(const Options& options, const std::wstring& command_line, bool override_held = false);
+
+// Is the override (OverrideKey / OverridePad, already parsed) held right now? A key chord counts
+// while its key and at least its modifiers are down; a pad chord while all of its buttons are down
+// on any pad (the triggers included, shared/atmt_input.h).
+bool OverrideHeld(unsigned key_chord, unsigned short pad_chord);
 
 // The command line of this process, as the game's own process would see it.
 std::wstring ProcessCommandLine();
@@ -107,9 +111,6 @@ inline constexpr uintptr_t kGameStrCopyPtr = 0x0136A194;
 // pointer was the same in every session measured, 21.-22.09) - the title route reads this object for
 // the UI holder and the save menu (see title_load.cpp's Ctx()/UiHolder()/SaveMenu()).
 inline constexpr uintptr_t kGameObjectPtr = 0x00C7C598;
-// How long to wait after the save subsystem is up before the fallback route requests the load (ms).
-void SetStartDelayMs(unsigned ms);
-unsigned StartDelayMs();
 
 // ---------------------------------------------------------------- the game's load *flow*
 // FUN_0064CAD0(self, phase): the session module's own "start a load" entry, `__thiscall` + one stack
@@ -122,18 +123,10 @@ void SetFlowLog(void* log_function);
 // Diagnostic only (installed unconditionally whenever "-al" is used): see src/probe_flow.cpp.
 bool InstallFlowHook(const AtmtModApi* api, std::string* why_not);
 
-// The reader spin-sleeps while this byte is zero; the mod waits for it before calling the reader.
+// The load request flag: the reader spin-sleeps while this byte is zero (watched by probe_writers.cpp).
 inline constexpr uintptr_t kGameSaveReadyFlag = 0x00C3E868;
-// How long to wait after the game's save subsystem is up before issuing a load.
-inline constexpr unsigned kLoadDelayMs = 1500;
 
-// Set by the reader probe: the original function (via the loader's trampoline) and a signal that
-// the game's save subsystem is up, i.e. the game has read a file itself.
-void SetSaveReaderTrampoline(void* trampoline);
-void SetLoadLog(void* log_function);
-void NotifySaveSystemReady();
-bool SaveSystemReady();
-// The last file name the game read through the reader.
+// The last file name the game read through the reader (set by the reader probe).
 void SetLastGameReadName(const std::string& name);
 std::string LastGameReadName();
 
@@ -158,12 +151,7 @@ std::wstring DefaultSaveDir();
 // "2026-09-21 07:25" in local time.
 std::string FormatTime(const FILETIME& ft);
 
-// ---------------------------------------------------------------- the action
-// Asks the game to load `path`. Outside the game this reports why it cannot, and the mod says what it *would* have done.
-// Returning false is not an error: outside the game there is nothing to call.
-bool TriggerLoad(const std::wstring& path, std::string* why_not);
-
-// "save063.dat" -> 63, for the manager state machine (see trigger.cpp). kNoSlot means "not a slot
+// "save063.dat" -> 63, for the manager state machine (see title_load.cpp). kNoSlot means "not a slot
 // the game's own format can produce" (autosaves, the system file's neighbours, anything else).
 inline constexpr unsigned kNoSlot = 0xFFFFFFFFu;
 unsigned SaveSlotNumber(const std::string& file_name);

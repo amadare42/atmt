@@ -12,8 +12,8 @@
 //       [0x00C3E868] = 1;                      // the request flag the worker waits on
 //   }
 //
-// The fallback route (trigger.cpp, used only if the title route's hook fails) writes the name buffer
-// and the flag itself, which gets the file *read* and nothing more, because the state block
+// Writing the name buffer and the flag by hand (the mod's old fallback route, since removed) gets the
+// file *read* and nothing more, because the state block
 // (0xC3E750/54/5C/60/64) stays as it was - entering the game needs the real menu (title_load.cpp).
 // This probe exists to see what the game's own request looks like: it records the arguments from a
 // real load (the menu), plus the two function pointers it goes through.

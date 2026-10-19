@@ -94,7 +94,7 @@ Adds window similar to the one in Crossbell arc - you can see logs of all dialog
 
 # Auto load last save on game start
 
-Adds ability to autoload last save on game start - similar to how Crossbell arc games did it. By default on every start; it can be set to only look for the "-al" flag (Steam launch options), or turned off.
+Adds ability to autoload last save on game start - similar to how Crossbell arc games did it. By default on every start; it can be set to only look for the "-al" flag (Steam launch options), or turned off. Hold Space (keyboard) or RT (pad) while the game starts to do the opposite for that one start.
 
 # In-game configuration overlay
 

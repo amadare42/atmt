@@ -118,9 +118,14 @@ every start, `parameter` only when the process was started with `-al` (Steam lau
 `saveNNN.dat` (and optionally `autosaveNN.dat`) and never touches decoys (`save511.dat` is the settings blob,
 `*_t.dat` headers, thumbnails).
 
+* **The override.** `OverrideKey` (default `Space`, a key chord) and `OverridePad` (default `RT`, a pad chord)
+  flip the decision for one start: held from launch until the title screen is up, a start that would load does
+  not, and one that would not (no `-al`, or `Autoload=disabled`) does. The key is read with
+  `GetAsyncKeyState`, the pad straight from `xinput1_3`'s `XInputGetState` export; empty disables either.
+  `Enabled=false` still turns the whole mod off.
 * **Why a keypress is not an option.** The game reads only DirectInput and XInput and never the window message
   queue, so synthesized keystrokes are ignored. The mod drives the game's own state machines instead.
-* **The title route** (`TitleLoad`, default) hooks the title's update (`FUN_00690B30`). From the logo or top-menu
+* **The title route** (the only one) hooks the title's update (`FUN_00690B30`). From the logo or top-menu
   state, with nothing modal up, it calls the save menu's `Open(2, 0x0040896D, title)` (`FUN_0064A720`) - the same
   call as the title's own "Load" - and then does what the list confirm does: sets the manager's slot and
   sub-state 2. The title's load callback (`0x0040896D` -> `FUN_006900F0`) then plays the fade and starts the game.
@@ -137,7 +142,7 @@ every start, `parameter` only when the process was started with `-al` (Steam lau
 * Other mods use the title route through the published service (`shared/load_last_save_api.h`).
 
 The offline tests (`atmt_al_test`) cover the command line, the options, which files count as saves and which
-is newest, the save-name parser, and the pad-script parser.
+is newest, the save-name parser, the pad-script parser, and the override's flip.
 
 ## battle_load
 

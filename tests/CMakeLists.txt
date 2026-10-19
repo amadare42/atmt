@@ -39,8 +39,7 @@ add_executable(atmt_al_test EXCLUDE_FROM_ALL
     ${CMAKE_SOURCE_DIR}/mods/load_last_save/src/probe_reader.cpp
     ${CMAKE_SOURCE_DIR}/mods/load_last_save/src/probe_request.cpp
     ${CMAKE_SOURCE_DIR}/mods/load_last_save/src/probe_flow.cpp
-    ${CMAKE_SOURCE_DIR}/mods/load_last_save/src/pad_inject.cpp
-    ${CMAKE_SOURCE_DIR}/mods/load_last_save/src/trigger.cpp)
+    ${CMAKE_SOURCE_DIR}/mods/load_last_save/src/pad_inject.cpp)
 atmt_console(atmt_al_test)
 target_link_libraries(atmt_al_test PRIVATE shell32 ole32)
 
