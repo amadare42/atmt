@@ -96,7 +96,7 @@ Adds window similar to the one in Crossbell arc - you can see logs of all dialog
 
 # Auto load last save on game start
 
-Adds ability to autoload last save on game start - similar to how Crossbell arc games did it. By default on every start; it can be set to only look for the "-al" flag (Steam launch options), or turned off. Hold Space (keyboard) or RT (pad) while the game starts to do the opposite for that one start.
+Adds ability to autoload last save on game start - similar to how Crossbell arc games did it. By default on every start; it can be set to only look for the "-al" flag (Steam launch options), or turned off. Hold Space or RT while the game starts to skip the load (or to force it when autoload is off).
 
 # Auto-advance dialog
 
@@ -172,3 +172,18 @@ Everything usable ends up in `dist/`; `build/` only holds intermediates. Details
 # License
 
 MIT
+
+# Changelog
+
+## Unreleased
+
+- **New: Auto-advance dialog** - pages turn by themselves after the voice line and a reading time, with a pie timer.
+- **New: Music info** - a port of Zorkats' [FalcomBGMInfo](https://github.com/Zorkats/FalcomBGMInfo), used with their permission.
+- **Autoload** - hold Space / RT at startup to skip the load or force it; the old fallback load route is removed.
+- **Controller** - LT/RT can now be part of any pad chord.
+- **Dialog log** - no more stray letters left over from some inline text codes.
+- **Steam Deck screen** - the master quartz level-up popup after battle stays centred and readable.
+
+## 0.1.0
+
+- First release.
