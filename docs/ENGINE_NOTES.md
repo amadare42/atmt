@@ -49,6 +49,24 @@ Other anchors: calls go through an ILT thunk region (`0x402000`-`0x404000`); the
   handlers their object at `0x0064F270` (table `0x012EADA0`) and `0x0064F240` (table `0x012EAD08`). The box's
   renderer is `FUN_005ef810` (called from `0x703410`, measured at `0x7035c0`/`0x706fa0`); `0x703390` clears the
   state when the box resets.
+* **Boxes.** holder = `[g_ctx+0x7BC]`; the message box is at `holder+0x19A4`, four speech bubbles at `holder+0x1D48`
+  + i x `0x9C0` (vtable `0x00B4F0BC` is `PopupMsgWindow`; RTTI is in the exe). `+0x6C` flags (open = `8` and `0x10`
+  set, `2` and `4` clear, `FUN_00701950`), `+0x340` typing progress (`0.01` start, `10000.0` fully shown, `20000.0` a
+  page break waits; `FUN_007018E0` jumps to `10000.0`), `+0x388` the speaker's actor, `+0x40/+0x44` size and
+  `+0x48/+0x4C` position in the 1280x720 canvas (the outer bounds, name plate included; the text is inset by
+  `+0x98/+0x9C/+0xA0/+0xA4` left/top/right/bottom, and the advance prompt, vtable `+0x34` `FUN_007020C0`, is a 32x32
+  icon centred at `x + w - right + 4`, `y + h - bottom`). vtable `+0x08` update (`FUN_00708A80` -> typing `FUN_00706FA0`),
+  `+0x0C` close (`FUN_00706E60`, also stops the speaker's voice), `+0x30` draw (`FUN_00703410`).
+* **Waiting for a key** after a message is a script handler polled every frame until it returns 1: `FUN_00656EB0`
+  (then closes the boxes) and `FUN_00657190` (keeps them). Both test `FUN_00446240(g_ctx, 1, 1, 1)` or
+  `(2, 2, 1)`; a press while typing finishes the text, at a page break it turns the page (`+0x334 = +0x330`, progress
+  back to `0.01`), at the end it closes. The text opcode (`FUN_006569C0`) also tests `(2, 0, 1)` and, when it is
+  down, shows the new text at once.
+* **Voices.** `FUN_005EA6B0(g_ctx, voice, actor, ...)` (thiscall, `ret 0x28`, 0 = playing) plays a line from the voice
+  table (`[g_ctx+0xB6380]`, 0x20-byte entries, the id at `+4`); with an actor it is recorded in `g_ctx+0xE0C` (64 x
+  16 bytes: voice, actor, lip-sync). `FUN_005E8620(g_ctx, voice)` is "still playing", `FUN_005E8780(g_ctx, voice)` the
+  file (`data/voice/wav[_jp]/e8vNNNNN.wav`, PCM 48 kHz mono), `FUN_005E85B0` stops one, `FUN_005E9FF0(actor)` an
+  actor's.
 * Runs are reused: of 32,354 captured lines only 21,742 distinct addresses appeared. The text is drawn once;
   watching a line already on screen never fires - capture the call that sets it.
 

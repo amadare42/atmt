@@ -11,6 +11,7 @@ A toolkit for modding Trails of Cold Steel I, providing enhancements and quality
 - [Load game from anywhere](#load-game-from-anywhere) - hotkey to load game from dialog or battle (LB+RB+Back by default)
 - [Dialog log window](#dialog-log-window) - view logs of all dialogs by pressing hotkey (LS by default)
 - [Auto load last save on game start](#auto-load-last-save-on-game-start) - automatically load the last save on game start
+- [Auto-advance dialog](#auto-advance-dialog) - dialog pages turn by themselves after the voice line and a reading time (F7 toggles)
 - [Music info](#music-info) - shows the title of each new track; a port of Zorkats' FalcomBGMInfo
 - [In-game configuration overlay](#in-game-configuration-overlay) - configure all mods in-game even via controller (LS+RS by default)
 - [ATMT Manager](#atmt-manager) - one app to install and configure SenPatcher on Deck or Windows and the mods mentioned above, configure and update them
@@ -96,6 +97,12 @@ Adds window similar to the one in Crossbell arc - you can see logs of all dialog
 # Auto load last save on game start
 
 Adds ability to autoload last save on game start - similar to how Crossbell arc games did it. By default on every start; it can be set to only look for the "-al" flag (Steam launch options), or turned off. Hold Space (keyboard) or RT (pad) while the game starts to do the opposite for that one start.
+
+# Auto-advance dialog
+
+Dialog pages turn by themselves after a reading time per character, never before the voice line ends. A small pie by the dialog box shows the time left. F7 (RB+R3) toggles it, E (Y) holds the current page; pressing the button yourself still advances at once.
+
+![Auto-advance timer](readme/autoadvance_indicator.jpg)
 
 # Music info
 

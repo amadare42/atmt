@@ -52,6 +52,12 @@ atmt_console(atmt_bgm_test)
 target_include_directories(atmt_bgm_test PRIVATE ${CMAKE_SOURCE_DIR}/mods/bgm_info/src ${BGM_INFO_GEN})
 add_dependencies(atmt_bgm_test bgm_info_map)
 
+# ---------------------------------------------------------------- dialog auto-advance (docs/MODS.md)
+# What auto_advance decides without the game: a page's characters, a voice's length, the countdown.
+add_executable(atmt_auto_advance_test EXCLUDE_FROM_ALL test_auto_advance.cpp)
+atmt_console(atmt_auto_advance_test)
+target_include_directories(atmt_auto_advance_test PRIVATE ${CMAKE_SOURCE_DIR}/mods/auto_advance/src)
+
 # ---------------------------------------------------------------- settings registry
 # The loader's settings registry and the in-place ini writer it saves through, linked
 # straight from the loader's sources: no dll, no game.

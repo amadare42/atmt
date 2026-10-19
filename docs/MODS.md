@@ -14,6 +14,7 @@ the manager's Settings screen; the authoritative table is the mod's own source.
 | `stick_rotation_speed` | right-stick camera speed and the camera's auto-rotation |
 | `load_last_save` | loads the newest save from the title (`-al`) |
 | `battle_load` | the game's own load menu in battle, on the field and during events |
+| `auto_advance` | turns dialog pages by itself after a reading time per character, after the voice line; a pie timer |
 | `bgm_info` | a port of Zorkats' FalcomBGMInfo: the title, album and track of each new piece of music, as a toast |
 
 ## trails_dialog_logger
@@ -197,6 +198,54 @@ MinHook and yaml-cpp; here only its idea and its data are kept.
 Settings: `Enabled`, `ToastSeconds`, `CooldownMinutes`, `ShowJapanese`, `ShowAlbum`, `TextSize`, `Position`,
 `OpacityPct`, `ShowKey` (F6), `ShowPad`, `FontPath`, `Diagnostics` (logs every music file the game opens and
 whether the map knows it - how a missing track is found).
+
+## auto_advance
+
+Turns a dialog page by itself once it has been fully shown for `BaseSeconds` + `MsPerChar` x its characters (at least `MinMs`), and
+never while its voice line plays. It is a confirm press, given to the dialog's own "wait for a key" and to nothing
+else.
+
+* **The press.** After a message, a script handler waits for a key every frame: `FUN_00656EB0` (then closes the
+  boxes) and `FUN_00657190` (keeps them). Both ask the button query `FUN_00446240(g_ctx, 1, 1, 1)` first - a press
+  while typing finishes the text, a press on a shown page turns it. Their two `call`s of the query's thunk
+  (`0x00656F2F`, `0x00657201`) are pointed at the mod, which asks the real query and answers "pressed" when the page
+  is due. The query itself is not hooked (battle_load hooks it, and one address takes one hook); calling the thunk
+  keeps battle_load's filter in the chain. Menus, choices and battles read the button elsewhere and are untouched.
+* **When a page is shown.** The message box (`holder+0x19A4`) and the four speech bubbles (`holder+0x1D48`,
+  stride `0x9C0`) each have a typing progress at `+0x340`: `10000.0` = the message is fully shown, `20000.0` = a
+  page break waits. The countdown starts when every open box is at one of those; its characters are the run's bytes
+  from `+0x334` to `+0x330` with control bytes, page headers and `#` codes left out (`src/pacing.h`).
+* **Voices.** `PlayVoice` (`FUN_005EA6B0`) is hooked to note each line as it starts (the game's own per-speaker table
+  skips lines without a speaker). Its length is read from the WAV header (the game's path, `FUN_005E8780`) for the
+  pie; whether it still plays is the game's own answer (`FUN_005E8620`), which is what holds the page.
+  `AfterVoiceMs` is added after it ends; a voice that never reports an end stops holding the page after 60 s.
+* **Pauses.** Time does not run while the game does not poll (paused, unfocused), while the overlay has the input
+  (the settings bar, the dialog log) or while battle_load's save menu is open over the dialog.
+* **Hold this line.** `HoldKey` (E) / `HoldPad` (Y) stop the countdown of the page on screen until pressed again;
+  a held page is never turned, and the hold ends with the page. Pressed while the text still types, it holds the
+  page about to be shown, and one pressed while the next box opens holds that new page. The key is read by the
+  overlay, so the game sees the press as well. Keys and pad act only while the game window has the focus. The press
+  is stamped with `GetTickCount()` on the render thread and taken by the game's thread at its next poll; the stamp
+  can be a tick ahead of that thread's clock, so its age is taken signed (`PressFresh`) - unsigned, it wrapped and
+  dropped about one press in six.
+* **Start while typing** (`StartWhileTyping`, off by default): the countdown starts when the page starts typing and
+  counts the whole page - from `+0x334` to the page's `02`, headers stepped over (`PageEnd`) - so the text can be
+  read as it appears. The page still turns only once it is fully shown; a page is known by its box, run and start,
+  so finishing the text with a press does not restart its countdown.
+* **The pie** is a window in the overlay, drawn on the box's bottom edge just right of the game's own advance prompt
+  (or in a screen corner, `PiePosition`). The prompt's place is the game's own formula (`FUN_007020C0`): centred at
+  `x + w - pad_right + 4`, `y + h - pad_bottom`, from the box's rectangle (`+0x40..+0x4C`) and its text insets
+  (`+0xA0`, `+0xA4`). The rectangle itself is the box's outer bounds (the name plate and a margin included), so it
+  is no anchor on its own. Canvas coordinates are mapped the way the game places its UI: scaled by
+  `min(W/1280, H/720)` and centred, which is also deckscreen's letterbox. When deckscreen runs with `Letterbox` off,
+  the canvas is scaled by `H/720` instead; the mod reads deckscreen's settings from the loader's registry when they
+  are registered and needs nothing from it otherwise. Without the overlay the mod still advances, with no pie and
+  no toggle key.
+
+Settings: `Enabled`, `MsPerChar` (20), `BaseSeconds` (0.25), `MinMs` (0 = none), `StartWhileTyping` (off), `WaitForVoice`, `AfterVoiceMs` (500), `ShowPie`,
+`PieSize` (16), `PiePosition`, `OpacityPct` (75), `ToggleKey` (F7), `TogglePad` (RB+R3), `HoldKey` (E), `HoldPad` (Y), `Diagnostics` (logs each page's
+characters, reading time and voice, and each press). An item's icon code (`#<id>I`) counts 20 characters on top of
+the text, for the item's name. The offline tests are `atmt_auto_advance_test`.
 
 ## atmt_overlay
 

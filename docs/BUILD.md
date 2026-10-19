@@ -46,6 +46,7 @@ of libc++/libunwind dependencies, so they run on a plain Windows install.
 | --- | --- |
 | `atmt_selftest` | the dialog logger's pure logic: the ini reader, text helpers, the log sink, the panel's ring of lines, key names |
 | `atmt_al_test` | everything that decides what `load_last_save` does: the `-al` switch, which files are saves, which is newest, the options |
+| `atmt_auto_advance_test` | `auto_advance`'s decisions: a page's character count, a voice's length from its WAV header, when the countdown presses |
 | `atmt_bgm_test` | `bgm_info`'s song map as compiled into the dll (every line parses) and the path lookup its CreateFile hooks make |
 | `atmt_settings_test` | the loader's settings registry and the in-place ini writer |
 | `atmt_loader_test` | the loader and a mod in a sandbox folder, exactly as the game sees them: exports, forwarding to the renamed original, mod discovery and start |
