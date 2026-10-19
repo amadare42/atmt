@@ -181,14 +181,20 @@ MIT
 
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - **New: Auto-advance dialog** - pages turn by themselves after the voice line and a reading time, with a pie timer.
 - **New: Music info** - a port of Zorkats' [FalcomBGMInfo](https://github.com/Zorkats/FalcomBGMInfo), used with their permission.
+- **New: Quality tweaks** - run whenever you move while turbo is engaged.
 - **Autoload** - hold Space / RT at startup to skip the load or force it; the old fallback load route is removed.
 - **Controller** - LT/RT can now be part of any pad chord.
 - **Dialog log** - no more stray letters left over from some inline text codes.
 - **Steam Deck screen** - the master quartz level-up popup after battle stays centred and readable.
+- **Steam Deck preset** - a larger auto-advance timer.
+
+Versions: ATMT Manager 0.1.1; Overlay, Dialog log, Deckscreen, Autoload, Battle load and the presets/data 0.1.1;
+Auto-advance, Music info and Quality tweaks 0.1.0 (new); the loader and Camera are unchanged (0.1.0).
+Autoload 0.1.1 needs ATMT Manager 0.1.1: the manager offers its own update first.
 
 ## 0.1.0
 

@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 
-set(ATMT_MANAGER_VERSION "0.1.0" CACHE STRING "the app's version")
+set(ATMT_MANAGER_VERSION "0.1.1" CACHE STRING "the app's version")
 option(ATMT_MANAGER_GUI "build the window (SDL2 + Dear ImGui)" ON)
 set(ATMT_RELEASE_REPO "" CACHE STRING "owner/name of the public GitHub repository with the releases")
 set(ATMT_MANIFEST_URL "" CACHE STRING "the manifest.json update checks ask (default: the repository's latest release's)")
