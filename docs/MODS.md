@@ -68,6 +68,10 @@ Runs the game at the screen's native size (the Deck's 1280x800) without the 10% 
   those functions switches the fit off.
 * **Full-canvas draws** (the Camp Menu backdrop, the speed-line ghost frame) are fitted in x only so they cover
   the screen; sprites parked wholly outside the canvas (battle turn-order icons at y=720) are culled.
+* **Anchored screens** (`AnchoredScreens`). The Battle Result (`FUN_004e4110`) is framed by a header and a
+  footer, so each of its draws is moved 40 px to the screen edge of the canvas half it sits in. The master
+  quartz level-up popup it draws (`FUN_004e3a00`, its child at `+0x1c4`) is a centred window whose pieces and
+  text lines would go to opposite edges, so it is exempt and stays centred.
 * **Save thumbnails.** `FUN_00442660` samples 176 rows over the full height; at 16:10 that leaves every tenth row
   black. A mid-function hook at `0x00442858` samples the centre 1280x720 band instead.
 * **Crisp text.** The game draws each text line from a 1024x64 texture it writes on the CPU, shrunk to the font

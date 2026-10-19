@@ -668,6 +668,21 @@ void __fastcall BattleResultDetour(void* self) {
     g_anchor_depth -= anchored;
 }
 
+// FUN_004e3a00 (__fastcall, the BattleResultMasterQuartz in ecx): the master quartz level-up popup,
+// drawn by the Battle Result (its child at +0x1c4, FUN_004e4110's last call). It is a window centred on
+// the canvas, not part of the header/footer frame, and anchoring tears it apart: each piece goes to the
+// edge of the half it is in, so the window and its text lines (placed one by one, by their own y) moved
+// in opposite directions and the text came out off the window. It is centred with the canvas.
+constexpr uintptr_t kDrawMasterQuartzPopup = 0x004e3a00;
+WorldSpriteFn g_real_master_quartz_popup = nullptr;
+
+void __fastcall MasterQuartzPopupDetour(void* self) {
+    const int previous = g_anchor_depth;
+    g_anchor_depth = 0;
+    g_real_master_quartz_popup(self);
+    g_anchor_depth = previous;
+}
+
 // FUN_006293d0 (__fastcall, the map in ecx, returns int): the area map - the full-screen map and, into
 // its 266x266 texture, the minimap. It points the main camera at the map, then draws the floor plane
 // and every marker on it (path dots, chests, the current location, exits: FUN_00626ca0 ->
@@ -884,6 +899,7 @@ __declspec(dllexport) uint32_t __cdecl AtmtModInit(const AtmtModApi* api) {
         {kDrawText, "\x55\x8b\xec\x81\xec\x84\x01\x00", 8, "FUN_005a1750"},
         {kMakeTranslation, "\x55\x8b\xec\x83\xec\x10\x8b\x45", 8, "FUN_00516e70"},
         {kDrawBattleResult, "\x56\x8b\xf1\x80\xbe\x94\x04\x00", 8, "FUN_004e4110"},
+        {kDrawMasterQuartzPopup, "\x56\x8b\xf1\x8b\x8e\xc4\x01\x00", 8, "FUN_004e3a00"},
         {kDrawWorldSprite, "\x55\x8b\xec\x6a\xff\x68\x14\x81", 8, "FUN_00592ec0"},
         {kDrawMap, "\x55\x8b\xec\x81\xec\x44\x01\x00", 8, "FUN_006293d0"},
         {kDrawPixelSprite, "\x55\x8b\xec\x81\xec\x08\x01\x00", 8, "FUN_00556a70"},
@@ -915,6 +931,9 @@ __declspec(dllexport) uint32_t __cdecl AtmtModInit(const AtmtModApi* api) {
          reinterpret_cast<void**>(&g_real_make_translation), "FUN_00516e70"},
         {kDrawBattleResult, reinterpret_cast<void*>(&BattleResultDetour),
          reinterpret_cast<void**>(&g_real_battle_result), "FUN_004e4110 (Battle Result)"},
+        {kDrawMasterQuartzPopup, reinterpret_cast<void*>(&MasterQuartzPopupDetour),
+         reinterpret_cast<void**>(&g_real_master_quartz_popup),
+         "FUN_004e3a00 (master quartz level-up)"},
         {kDrawWorldSprite, reinterpret_cast<void*>(&WorldSpriteDetour),
          reinterpret_cast<void**>(&g_real_world_sprite), "FUN_00592ec0"},
         {kDrawMap, reinterpret_cast<void*>(&MapDetour), reinterpret_cast<void**>(&g_real_map),
