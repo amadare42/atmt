@@ -46,7 +46,7 @@ if ($Clean) {
     Remove-Item (Join-Path $dist 'game'), (Join-Path $dist 'tools') -Recurse -Force -ErrorAction SilentlyContinue
 }
 $targets = 'atmt_loader', 'atmt_loader_gfsdk', 'atmt_overlay', 'trails_dialog_logger', 'load_last_save',
-           'deckscreen', 'stick_rotation_speed', 'battle_load', 'bgm_info', 'auto_advance',
+           'deckscreen', 'stick_rotation_speed', 'battle_load', 'bgm_info', 'auto_advance', 'quality_tweaks',
            'atmt_selftest', 'atmt_al_test', 'atmt_bgm_test', 'atmt_auto_advance_test', 'atmt_settings_test', 'atmt_loader_test', 'atmt_dummy_orig',
            'atmt_inject', 'atmt_modules', 'atmt_schema_dump'
 cmake -S $root -B $build -G "MinGW Makefiles" -DCMAKE_MAKE_PROGRAM=mingw32-make `
@@ -60,7 +60,8 @@ $outputs = 'game\GFSDK_SSAO_D3D11.win32.dll', 'tools\atmt_loader.dll',
            'game\atmt_mods\atmt_overlay.dll', 'game\atmt_mods\trails_dialog_logger.dll',
            'game\atmt_mods\load_last_save.dll', 'game\atmt_mods\deckscreen.dll',
            'game\atmt_mods\stick_rotation_speed.dll', 'game\atmt_mods\battle_load.dll',
-           'game\atmt_mods\bgm_info.dll', 'game\atmt_mods\auto_advance.dll'
+           'game\atmt_mods\bgm_info.dll', 'game\atmt_mods\auto_advance.dll',
+           'game\atmt_mods\quality_tweaks.dll'
 foreach ($rel in $outputs) {
     $path = Join-Path $dist $rel
     if (-not (Test-Path $path)) { throw "build failed: dist\$rel not produced" }

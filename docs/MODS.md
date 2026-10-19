@@ -16,6 +16,7 @@ the manager's Settings screen; the authoritative table is the mod's own source.
 | `battle_load` | the game's own load menu in battle, on the field and during events |
 | `auto_advance` | turns dialog pages by itself after a reading time per character, after the voice line; a pie timer |
 | `bgm_info` | a port of Zorkats' FalcomBGMInfo: the title, album and track of each new piece of music, as a toast |
+| `quality_tweaks` | small gameplay conveniences: running while turbo is engaged |
 
 ## trails_dialog_logger
 
@@ -246,6 +247,20 @@ Settings: `Enabled`, `MsPerChar` (20), `BaseSeconds` (0.25), `MinMs` (0 = none),
 `PieSize` (16), `PiePosition`, `OpacityPct` (75), `ToggleKey` (F7), `TogglePad` (RB+R3), `HoldKey` (E), `HoldPad` (Y), `Diagnostics` (logs each page's
 characters, reading time and voice, and each press). An item's icon code (`#<id>I`) counts 20 characters on top of
 the text, for the item's name. The offline tests are `atmt_auto_advance_test`.
+
+## quality_tweaks
+
+Small conveniences, each behind its own setting.
+
+* **Turbo run** (`TurboRun`). The field control update `FUN_005B7FC0` asks once per frame whether Run (R1, button 5)
+  is held: the call at `0x005B8808` (`FUN_00446240` through thunk `0x0040DB7A`, mode 0), result in `bl`. A held Run
+  picks the run speed (`[this+0x13A0]`); otherwise Walk (button 2) or the stick's tilt picks walking or the normal
+  speed, and a centred stick skips all of it. That one call goes to the mod instead, which asks the same query and
+  answers "held" when turbo is in effect (the turbo object's byte, see ENGINE_NOTES.md "Turbo") and Walk is not
+  held. Other R1 queries are untouched, and a scene that forbids running (`[ctx+0x170C]` bit `0x1000000`,
+  `FUN_00401FC3(0x106)`) still skips the call. The button query itself is not hooked - `battle_load` owns that hook.
+
+Settings: `Enabled`, `TurboRun` (on).
 
 ## atmt_overlay
 

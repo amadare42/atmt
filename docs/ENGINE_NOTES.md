@@ -95,6 +95,19 @@ test) chains. DirectInput is hooked through a throwaway keyboard device's vtable
 share - on the first `Present`, not at start-up, because the game makes its pad objects from one `EnumDevices` call
 at startup and nothing of ours should touch DirectInput before that.
 
+**Turbo.** `FUN_00482FE0(this = turbo object, dt)` runs every frame (from `0x004418CE`/`0x00441DD6`): when the
+launcher's Turbo Mode is on and the turbo button (button 7, R2; `push 7` at `0x00483009`, SenPatcher's
+`TurboModeButton` rewrites it) is held, it writes `state+4 = 1` (`0x00483018`) and scales `dt` by the field or battle
+factor, else `state+4 = 0` (`0x00483082`). The object is the singleton at `[0x00C7C0CC]` (getter `FUN_00483110`,
+thunk `0x00402D38`), `state = [object]`, 0x14 bytes. SenPatcher's `MakeTurboToggle` changes what the button
+call returns, so the byte reads the same either way. Button indices follow SenPatcher's list: 0 Square, 1 Cross,
+2 Circle, 3 Triangle, 4 L1, 5 R1, 6 L2, 7 R2, 8 Select, 9 Start, 10 L3, 11 R3, 12-15 the d-pad.
+
+**Walking and running.** The launcher binds "Run / Switch to Right" to R1 and "Cancel / Walk" to Circle. The field
+control update `FUN_005B7FC0` queries R1 (`0x005B8808`) and, when it is not held, Circle (`0x005B881F`), then sets
+the speed: `[this+0x13A0]` run, `[+0x1394]` walk, or by the stick's tilt against `[+0x139C]` walk / `[+0x1398]`
+normal. See [MODS.md](MODS.md#quality_tweaks).
+
 ## Rendering
 
 | what | address |

@@ -13,6 +13,7 @@ A toolkit for modding Trails of Cold Steel I, providing enhancements and quality
 - [Auto load last save on game start](#auto-load-last-save-on-game-start) - automatically load the last save on game start
 - [Auto-advance dialog](#auto-advance-dialog) - dialog pages turn by themselves after the voice line and a reading time (F7 toggles)
 - [Music info](#music-info) - shows the title of each new track; a port of Zorkats' FalcomBGMInfo
+- [Quality tweaks](#quality-tweaks) - small conveniences, such as running whenever you move while turbo is engaged
 - [In-game configuration overlay](#in-game-configuration-overlay) - configure all mods in-game even via controller (LS+RS by default)
 - [ATMT Manager](#atmt-manager) - one app to install and configure SenPatcher on Deck or Windows and the mods mentioned above, configure and update them
 
@@ -111,6 +112,11 @@ Just a port of Zorkats' [FalcomBGMInfo](https://github.com/Zorkats/FalcomBGMInfo
 Many thanks to Zorkats for permission to use their mod. Original: https://github.com/Zorkats/FalcomBGMInfo
 
 ![Music info toast](readme/music_info.jpg)
+
+# Quality tweaks
+
+Small conveniences, each with its own switch. **Run in turbo**: while turbo is engaged, the character runs
+whenever it moves, as if Run (R1) were held - holding Walk still walks.
 
 # In-game configuration overlay
 

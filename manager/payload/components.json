@@ -11,6 +11,7 @@
     {"name": "load_last_save", "title": "Autoload", "version": "0.1.0", "changelog": ""},
     {"name": "battle_load", "title": "Battle load", "version": "0.1.0", "changelog": ""},
     {"name": "bgm_info", "title": "Music info", "version": "0.1.0", "changelog": "New: a port of Zorkats' FalcomBGMInfo - the title of each new piece of music."},
-    {"name": "auto_advance", "title": "Auto-advance", "version": "0.1.0", "changelog": "New: dialog turns its pages by itself, after the voice line, with a timer by the box."}
+    {"name": "auto_advance", "title": "Auto-advance", "version": "0.1.0", "changelog": "New: dialog turns its pages by itself, after the voice line, with a timer by the box."},
+    {"name": "quality_tweaks", "title": "Quality tweaks", "version": "0.1.0", "changelog": "New: the character runs whenever it moves while turbo is engaged."}
   ]
 }
