@@ -77,6 +77,7 @@ add_subdirectory(mods/load_last_save)
 add_subdirectory(mods/deckscreen)
 add_subdirectory(mods/stick_rotation_speed)
 add_subdirectory(mods/battle_load)
+add_subdirectory(mods/bgm_info)
 # add_subdirectory(mods/my_next_mod)
 
 # ---------------------------------------------------------------- tests + tools

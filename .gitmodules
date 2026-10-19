@@ -18,3 +18,7 @@
 	path = third_party/zstd
 	url = https://github.com/facebook/zstd
 	shallow = true
+[submodule "third_party/FalcomBGMInfo"]
+	path = third_party/FalcomBGMInfo
+	url = https://github.com/Zorkats/FalcomBGMInfo
+	shallow = true

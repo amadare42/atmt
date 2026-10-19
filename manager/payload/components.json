@@ -9,6 +9,7 @@
     {"name": "deckscreen", "title": "Deckscreen (Steam Deck)", "version": "0.1.0", "changelog": ""},
     {"name": "stick_rotation_speed", "title": "Camera", "version": "0.1.0", "changelog": ""},
     {"name": "load_last_save", "title": "Autoload", "version": "0.1.0", "changelog": ""},
-    {"name": "battle_load", "title": "Battle load", "version": "0.1.0", "changelog": ""}
+    {"name": "battle_load", "title": "Battle load", "version": "0.1.0", "changelog": ""},
+    {"name": "bgm_info", "title": "Music info", "version": "0.1.0", "changelog": "New: a port of Zorkats' FalcomBGMInfo - the title of each new piece of music."}
   ]
 }

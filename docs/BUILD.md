@@ -20,7 +20,7 @@ dist/                   everything usable that came out of a build (gitignored)
   atmt_manager.exe      the Windows manager; finds payload\ next to it
   linux/                atmt_manager (bare binary, what deploy_deck runs) and the AppImage
   release/<tag>/        tools\release.ps1's output
-third_party/            git submodules: MinHook, Dear ImGui, SDL2, Monocypher, zstd (pinned by commit)
+third_party/            git submodules: MinHook, Dear ImGui, SDL2, Monocypher, zstd, FalcomBGMInfo (pinned by commit)
 ```
 
 Nothing built is ever written anywhere else; `git status` stays clean after a build.
@@ -46,6 +46,7 @@ of libc++/libunwind dependencies, so they run on a plain Windows install.
 | --- | --- |
 | `atmt_selftest` | the dialog logger's pure logic: the ini reader, text helpers, the log sink, the panel's ring of lines, key names |
 | `atmt_al_test` | everything that decides what `load_last_save` does: the `-al` switch, which files are saves, which is newest, the options |
+| `atmt_bgm_test` | `bgm_info`'s song map as compiled into the dll (every line parses) and the path lookup its CreateFile hooks make |
 | `atmt_settings_test` | the loader's settings registry and the in-place ini writer |
 | `atmt_loader_test` | the loader and a mod in a sandbox folder, exactly as the game sees them: exports, forwarding to the renamed original, mod discovery and start |
 

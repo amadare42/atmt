@@ -43,6 +43,15 @@ add_executable(atmt_al_test EXCLUDE_FROM_ALL
 atmt_console(atmt_al_test)
 target_link_libraries(atmt_al_test PRIVATE shell32 ole32)
 
+# ---------------------------------------------------------------- the music toast (docs/MODS.md)
+# FalcomBGMInfo's song map as compiled into bgm_info.dll, and the path lookup its hooks make.
+add_executable(atmt_bgm_test EXCLUDE_FROM_ALL
+    test_bgm_info.cpp
+    ${CMAKE_SOURCE_DIR}/mods/bgm_info/src/bgm_map.cpp)
+atmt_console(atmt_bgm_test)
+target_include_directories(atmt_bgm_test PRIVATE ${CMAKE_SOURCE_DIR}/mods/bgm_info/src ${BGM_INFO_GEN})
+add_dependencies(atmt_bgm_test bgm_info_map)
+
 # ---------------------------------------------------------------- settings registry
 # The loader's settings registry and the in-place ini writer it saves through, linked
 # straight from the loader's sources: no dll, no game.

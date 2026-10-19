@@ -14,6 +14,7 @@ the manager's Settings screen; the authoritative table is the mod's own source.
 | `stick_rotation_speed` | right-stick camera speed and the camera's auto-rotation |
 | `load_last_save` | loads the newest save from the title (`-al`) |
 | `battle_load` | the game's own load menu in battle, on the field and during events |
+| `bgm_info` | a port of Zorkats' FalcomBGMInfo: the title, album and track of each new piece of music, as a toast |
 
 ## trails_dialog_logger
 
@@ -167,6 +168,35 @@ menu; this mod calls the same functions from elsewhere.
   while the mod waits, the mod drives it once per frame.
 
 Settings: `Key` (F9), `PadChord` (BACK+START), `Route`, `Field`, `Events`, `MenuPhase`, `Diagnostics`.
+
+## bgm_info
+
+Just a port of Zorkats' [FalcomBGMInfo](https://github.com/Zorkats/FalcomBGMInfo) mod
+(`third_party/FalcomBGMInfo`, a git submodule) to the toolkit - the idea and the song list are theirs.
+When a new piece of music starts, a toast slides into a corner with its title, the Japanese title,
+the soundtrack album and the disc/track. The original is a standalone proxy dll with its own Present hook, ImGui,
+MinHook and yaml-cpp; here only its idea and its data are kept.
+
+* **The song.** The game opens a track's file (`data\bgm\wav\ed8NNN.wav`) when it starts playing it, so
+  `kernel32!CreateFileA`/`CreateFileW` are hooked through the loader's hook service and the path is looked up in
+  FalcomBGMInfo's `BgmMap_CS1.yaml`. The map is compiled into the dll at build time from the submodule (an
+  `embed_file.cmake` array), so nothing ships next to it; a `bgm_info_map.yaml` in `atmt_mods\` (same format)
+  replaces it. The hook only tests the extension and does an allocation-free lookup, then hands the song's index
+  to the render thread. No game address is touched (nothing for `code_check.h`).
+* **New song or not.** The file opened again while it is still the current song is not a new song; a song that
+  comes back (field -> battle -> field) is announced again only after `CooldownMinutes` (300, as the original's
+  5 hours), keyed by title since two files can be the same piece.
+* **The toast** is a window in the overlay (`shared/overlay_api.h`): drawn with ImGui shapes and the game's
+  palette (`shared/atmt_theme.h`), the note icon included, so there is no texture and no D3D in the mod. It is drawn
+  as a live preview while the settings bar shows its menu.
+* **The font.** The overlay's font has no Japanese, so the mod reads one the system already has (`FontPath`, or
+  the first of Meiryo, Yu Gothic, MS Gothic in the Windows fonts folder; Proton's prefix has an MS Gothic) on its
+  own thread and adds it to the overlay's atlas between frames, and takes it out again before the dll goes away.
+  Without one, the Japanese line is left out rather than drawn as boxes.
+
+Settings: `Enabled`, `ToastSeconds`, `CooldownMinutes`, `ShowJapanese`, `ShowAlbum`, `TextSize`, `Position`,
+`OpacityPct`, `ShowKey` (F6), `ShowPad`, `FontPath`, `Diagnostics` (logs every music file the game opens and
+whether the map knows it - how a missing track is found).
 
 ## atmt_overlay
 
