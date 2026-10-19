@@ -211,7 +211,7 @@ archive of whole `.pkg` files.
   decompiles use Ghidra headless: set `GHIDRA_ROOT`, copy your `ed8.exe` to `ghidra\ed8.exe`, run
   `ghidra\run_import.cmd` once (minutes), then `ghidra\run_script.cmd <script>.java <args>` with the scripts in
   `ghidra\scripts` (`decompile`, `callers_of`, `find_calls`, `find_xrefs`, `find_strings`, `find_ptr`,
-  `find_symbol`, `dump_at`, `dump_bytes`, `dump_range`, `dump_name_table`, `list_blocks`, ...). Import the exe as
+  `find_symbol`, `dump_vtable`, `dump_at`, `dump_bytes`, `dump_range`, `dump_name_table`, `list_blocks`, ...). Import the exe as
   x86 / 32-bit / MSVC.
 * **Dynamic.** A hardware execute breakpoint tests whether an address runs at all without patching a byte. A line
   is drawn once, so arm a watch before it appears and advance one line. Cheat Engine's "find out what writes to
