@@ -60,6 +60,7 @@ struct PadKey {
 const PadKey kPadKeys[] = {
     {ImGuiKey_GamepadFaceDown, "A"},    {ImGuiKey_GamepadFaceRight, "B"}, {ImGuiKey_GamepadFaceLeft, "X"},
     {ImGuiKey_GamepadFaceUp, "Y"},      {ImGuiKey_GamepadL1, "LB"},       {ImGuiKey_GamepadR1, "RB"},
+    {ImGuiKey_GamepadL2, "LT"},         {ImGuiKey_GamepadR2, "RT"},
     {ImGuiKey_GamepadL3, "L3"},         {ImGuiKey_GamepadR3, "R3"},       {ImGuiKey_GamepadBack, "BACK"},
     {ImGuiKey_GamepadStart, "START"},   {ImGuiKey_GamepadDpadUp, "UP"},   {ImGuiKey_GamepadDpadDown, "DOWN"},
     {ImGuiKey_GamepadDpadLeft, "LEFT"}, {ImGuiKey_GamepadDpadRight, "RIGHT"},

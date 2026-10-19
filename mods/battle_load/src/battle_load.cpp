@@ -310,7 +310,9 @@ uint16_t XInputButtons() {
     uint16_t buttons = 0;
     for (uint32_t i = 0; i < 4; ++i) {
         PadState state{};
-        if (g_xinput(i, &state) == 0) buttons = static_cast<uint16_t>(buttons | state.buttons);
+        if (g_xinput(i, &state) == 0) {
+            buttons = static_cast<uint16_t>(buttons | atmt::PadButtons(state.buttons, state.lt, state.rt));
+        }
     }
     return buttons;
 }

@@ -32,7 +32,8 @@
 #define ATMT_OVERLAY_API_VERSION 1u
 
 /* The raw pad, read through the overlay's XInputGetState hook (the real pad, never the idle one the
- * game may be handed). XINPUT_GAMEPAD's buttons and sticks; have_pad = 0 when no pad answered. */
+ * game may be handed). XINPUT_GAMEPAD's buttons (the triggers folded in as atmt::kPadLT/kPadRT, see
+ * shared/atmt_input.h) and sticks; have_pad = 0 when no pad answered. */
 typedef struct AtmtOverlayInput {
     uint16_t pad_buttons;
     int16_t thumb_lx, thumb_ly, thumb_rx, thumb_ry;

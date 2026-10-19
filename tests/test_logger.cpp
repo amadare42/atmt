@@ -269,6 +269,16 @@ int main(int argc, char** argv) {
     Check(std::string(PadButtonName(kPadB)) == "B" && std::string(PadButtonName(kPadUp)) == "UP"
               && std::string(PadButtonName(kPadL3)) == "L3",
           "the button names are for the log as well as for the ini");
+    Check(PadButtonFromName("RT") == kPadRT && PadButtonFromName("l2") == kPadLT,
+          "the triggers are buttons too");
+    Check(std::string(PadButtonName(kPadRT)) == "RT" && std::string(PadButtonName(kPadLT)) == "LT",
+          "the triggers are named");
+    Check(PadButtons(kPadA, 0, 255) == (kPadA | kPadRT) && PadButtons(kPadA, 255, 0) == (kPadA | kPadLT),
+          "a pulled trigger is its bit");
+    Check(PadButtons(0, kTriggerThreshold, 20) == 0, "a resting trigger is not pressed");
+    Check(PadButtons(kPadRT, 0, 0) == 0, "the trigger bits come from the triggers only");
+    Check(PadChordFromName("LB+RT") == (kPadLB | kPadRT) && PadChordName(kPadRT | kPadLB) == "LB+RT",
+          "a trigger in a chord, both ways");
     Check(PadChordFromName("L3+R3") == (kPadL3 | kPadR3), "a chord is its buttons together");
     Check(PadChordFromName("back + start") == (kPadBack | kPadStart), "spaces in a chord are fine");
     Check(PadChordFromName("B") == kPadB, "a single button is a chord of one");

@@ -121,14 +121,22 @@ uint32_t PadDown(const XInputState& state) {
     return down;
 }
 
+// A chord (atmt's bits, the triggers as kPadLT/kPadRT) in PadDown()'s bits.
+uint32_t ChordMask(unsigned short chord) {
+    uint32_t mask = chord & ~static_cast<uint32_t>(atmt::kPadLT | atmt::kPadRT);
+    if ((chord & atmt::kPadLT) != 0) mask |= kLeftTriggerBit;
+    if ((chord & atmt::kPadRT) != 0) mask |= kRightTriggerBit;
+    return mask;
+}
+
 uint32_t __stdcall HookedGetState(uint32_t index, XInputState* state) {
     const uint32_t rc = g_real_xinput(index, state);
     if (rc != 0 || state == nullptr) return rc;
     PadLatch* latch = index < 4 ? &g_pad_latch[index] : nullptr;
     // The settings bar's chord never reaches the game whole: the game polls before the frame is
     // presented, so on the poll the chord completes the overlay is not open yet.
-    const unsigned short chord = Opts().settings_chord;
-    if (latch != nullptr && chord != 0 && (state->buttons & chord) == chord) latch->mask |= chord;
+    const uint32_t chord = ChordMask(Opts().settings_chord);
+    if (latch != nullptr && chord != 0 && (PadDown(*state) & chord) == chord) latch->mask |= chord;
     if (g_pad_capture == 0) {
         if (latch == nullptr) return rc;
         const uint32_t down = PadDown(*state);
@@ -365,7 +373,7 @@ bool ReadPad(AtmtOverlayInput* out) {
             return false;
         }
     }
-    out->pad_buttons = state.buttons;
+    out->pad_buttons = atmt::PadButtons(state.buttons, state.left_trigger, state.right_trigger);
     out->thumb_lx = state.thumb_lx;
     out->thumb_ly = state.thumb_ly;
     out->thumb_rx = state.thumb_rx;

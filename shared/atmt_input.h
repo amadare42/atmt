@@ -292,11 +292,26 @@ constexpr unsigned short kPadA = 0x1000;
 constexpr unsigned short kPadB = 0x2000;
 constexpr unsigned short kPadX = 0x4000;
 constexpr unsigned short kPadY = 0x8000;
+// The analog triggers, as two of the bits XINPUT_GAMEPAD leaves unused (0x0400 is the guide button
+// only through the undocumented XInputGetStateEx, which nothing here calls): PadButtons() sets them
+// when a trigger is pulled past kTriggerThreshold, so a trigger is a button in every chord.
+constexpr unsigned short kPadLT = 0x0400;
+constexpr unsigned short kPadRT = 0x0800;
+constexpr unsigned char kTriggerThreshold = 100;   // of 255: a deliberate pull, not a resting finger
+
+// XINPUT_GAMEPAD's buttons with the triggers folded in as kPadLT/kPadRT.
+inline unsigned short PadButtons(unsigned short buttons, unsigned char left_trigger,
+                                 unsigned char right_trigger) {
+    unsigned short out = static_cast<unsigned short>(buttons & ~(kPadLT | kPadRT));
+    if (left_trigger > kTriggerThreshold) out = static_cast<unsigned short>(out | kPadLT);
+    if (right_trigger > kTriggerThreshold) out = static_cast<unsigned short>(out | kPadRT);
+    return out;
+}
 
 constexpr short kStickDeadzone = 16000;   // a stick counts as a direction past this
 
-// "B" -> kPadB, "d-pad up" -> kPadUp, "back" -> kPadBack. 0 for a name this does not know (the
-// caller reports it); the analog triggers are deliberately not part of this.
+// "B" -> kPadB, "d-pad up" -> kPadUp, "back" -> kPadBack, "RT" -> kPadRT. 0 for a name this does not
+// know (the caller reports it).
 inline unsigned short PadButtonFromName(const std::string& name) {
     struct Entry {
         const char* name;
@@ -311,7 +326,8 @@ inline unsigned short PadButtonFromName(const std::string& name) {
         {"A", kPadA},          {"B", kPadB},             {"X", kPadX},
         {"Y", kPadY},          {"L3", kPadL3},           {"LSTICK", kPadL3},
         {"LEFTSTICK", kPadL3}, {"R3", kPadR3},           {"RSTICK", kPadR3},
-        {"RIGHTSTICK", kPadR3},
+        {"RIGHTSTICK", kPadR3}, {"LT", kPadLT},           {"L2", kPadLT},
+        {"RT", kPadRT},        {"R2", kPadRT},
     };
     std::string up;
     for (char c : name) {
@@ -341,6 +357,8 @@ inline const char* PadButtonName(unsigned short button) {
         case kPadB: return "B";
         case kPadX: return "X";
         case kPadY: return "Y";
+        case kPadLT: return "LT";
+        case kPadRT: return "RT";
         default: return "(none)";
     }
 }
@@ -363,9 +381,10 @@ inline unsigned short PadChordFromName(const std::string& name) {
 
 // kPadL3 | kPadR3 -> "L3+R3", in a fixed order; empty for 0.
 inline std::string PadChordName(unsigned short chord) {
-    static const unsigned short kOrder[] = {kPadA,  kPadB,    kPadX,     kPadY,   kPadLB,
-                                            kPadRB, kPadL3,   kPadR3,    kPadBack, kPadStart,
-                                            kPadUp, kPadDown, kPadLeft,  kPadRight};
+    static const unsigned short kOrder[] = {kPadA,    kPadB,    kPadX,    kPadY,     kPadLB,
+                                            kPadRB,   kPadLT,   kPadRT,   kPadL3,    kPadR3,
+                                            kPadBack, kPadStart, kPadUp,  kPadDown,  kPadLeft,
+                                            kPadRight};
     std::string out;
     for (unsigned short bit : kOrder) {
         if ((chord & bit) == 0) continue;
