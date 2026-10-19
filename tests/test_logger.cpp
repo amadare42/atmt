@@ -74,7 +74,17 @@ int main(int argc, char** argv) {
     Check(StripCodes("#KHello there,\r\nfriend!") == "Hello there, friend!",
           "inline codes and newlines are stripped");
     Check(StripCodes("#E6#MAI'm still here.") == "I'm still here.", "multiple codes stripped");
-    Check(StripCodes("#MIAStill here.") == "Still here.", "longer code with word guard");
+    Check(StripCodes("#KIt's fine.") == "It's fine.", "a letter code stops at the word");
+    Check(StripCodes("#EI#M[[autoM4]]Anyway, let me show you to my room, Fie.")
+              == "Anyway, let me show you to my room, Fie.",
+          "#E takes one letter argument (t3530)");
+    Check(StripCodes("#EE#M0There's so much space.") == "There's so much space.",
+          "#E's letter argument may repeat the E (t3530)");
+    Check(StripCodes("#EEI could stand to bone up") == "I could stand to bone up",
+          "#E's letter argument is one letter, the text follows");
+    Check(StripCodes("#E[1]#MAAll right.") == "All right.", "#M takes one letter argument");
+    Check(StripCodes("#E2#MA#5SAAAAHHHH!") == "AAAAHHHH!", "a digit code is one letter long");
+    Check(StripCodes("#003caccidents") == "accidents", "a digit code's letter may be lowercase");
     Check(StripCodes("#M[[autoM0]]A-Alisa?!") == "A-Alisa?!", "bracketed code argument");
     Check(StripCodes("#0TSeems like everyone") == "Seems like everyone", "digit code + word");
     Check(StripCodes("#1P*yawn*") == "*yawn*", "a digit code keeps its letter");
