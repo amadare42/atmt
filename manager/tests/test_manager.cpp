@@ -1563,8 +1563,12 @@ void TestManifest(const fs::path& tmp) {
 int main() {
     std::setvbuf(stdout, nullptr, _IONBF, 0);
     SetLog([](const std::string&) {});   // the core's own lines would drown the results
-    const fs::path tmp = fs::temp_directory_path() / "atmt_manager_test";
+    // Canonical, as the core makes the paths it finds (SteamLibraries): a %TEMP% in 8.3 form
+    // (C:\Users\RUNNER~1\..., GitHub's Windows runners) would not compare equal to them.
     std::error_code ec;
+    const fs::path temp = fs::temp_directory_path();
+    const fs::path canon = fs::weakly_canonical(temp, ec);
+    const fs::path tmp = (ec ? temp : canon) / "atmt_manager_test";
     fs::remove_all(tmp, ec);
     fs::create_directories(tmp, ec);
     // the downloaded components and state.json go into the test's own folder
